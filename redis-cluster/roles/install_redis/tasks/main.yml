@@ -10,7 +10,7 @@
   - name: extract archive
     command: chdir=/tmp/ /bin/tar -xf /tmp/{{redis_gz_file}} -C /usr/local/
   - name: install redis
-    shell: cd /usr/local/{{redis_dir}}; make && make install
+    shell: cd /usr/local/{{redis_dir}}; make MALLOC=libc && make install
   - name: add bin path
     shell: sed -i '/{{redis_dir}}/d' /etc/profile ; echo export "PATH=/usr/local/{{redis_dir}}/src:$PATH" >>/etc/profile
   - name: print redis version info
