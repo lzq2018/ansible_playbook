@@ -1,0 +1,55 @@
+# tasks file for init_cluster
+---
+  - name: create redis cluster config dir
+    file: path=/etc/redis/redis_cluster state=directory
+  #redis01
+  - block:
+    - name: create redis01 config dir
+      file: path=/etc/redis/redis_cluster/{{ item }} state=directory 
+      with_items:
+       - 7000
+       - 7001
+       - 7002 
+       - 7003
+    - name: configure redis01 redis.conf                                                
+      template: src=redis.conf.j2 dest=/etc/redis/redis_cluster/{{ item }}/redis.conf
+      with_items:
+       - 7000
+       - 7001
+       - 7002
+       - 7003
+    when: role == 'redis01'
+  #redis02
+  - block:
+    - name: create redis02 config dir
+      file: path=/etc/redis/redis_cluster/{{ item }} state=directory
+      with_items:
+       - 7004
+       - 7005
+       - 7006 
+       - 7007
+    - name: configure redis02 redis.conf
+      template: src=redis.conf.j2 dest=/etc/redis/redis_cluster/{{ item }}/redis.conf
+      with_items:
+       - 7004
+       - 7005
+       - 7006
+       - 7007
+    when: role == 'redis02'
+  #redis03
+  - block:  
+    - name: create redis03 config dir
+      file: path=/etc/redis/redis_cluster/{{ item }} state=directory
+      with_items:
+       - 7008
+       - 7009
+       - 7010
+       - 7011
+    - name: configure redis03 redis.conf                                                
+      template: src=redis.conf.j2 dest=/etc/redis/redis_cluster/{{ item }}/redis.conf
+      with_items:
+       - 7008
+       - 7009
+       - 7010
+       - 7011
+    when: role == 'redis03'

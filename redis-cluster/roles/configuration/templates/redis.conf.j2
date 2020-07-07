@@ -1,0 +1,11 @@
+bind 0.0.0.0
+#限制最大使用内存为4G (4 * 1024 * 1024 * 1024) bytes
+maxmemory 4294967296
+#后台运行
+daemonize yes 
+pidfile  /var/run/{{item}}.pid 
+port  {{item}} 
+cluster-enabled yes 
+cluster-config-file  /etc/redis/redis_cluster/{{item}}/nodes-{{item}}.conf 
+cluster-node-timeout 5000 
+appendonly yes 

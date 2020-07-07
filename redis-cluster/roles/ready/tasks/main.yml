@@ -1,0 +1,21 @@
+---
+  - name: add value to sysctl.conf for net.core.somaxconn value is 2048
+    shell: echo "net.core.somaxconn = 2048" >  /etc/sysctl.d/redis.conf
+  - name: add value to sysctl.conf for vm.overcommit_memory = 1
+    shell: echo "vm.overcommit_memory = 1" >>  /etc/sysctl.d/redis.conf
+  - name: sysctl apply 
+    shell: sysctl --system
+  - name: disable hugepage
+    shell: echo never > /sys/kernel/mm/transparent_hugepage/enabled
+  #Ubuntu 系统安装依赖
+  - name: install redis depend pkg
+    apt: name={{ item }} state=present
+    with_items:
+      - gcc
+      - g++
+      - make
+      #- libstdc++-devel
+    when: "ansible_os_family == 'Debian'"
+  #Redhat 系统安装依赖
+ 
+  

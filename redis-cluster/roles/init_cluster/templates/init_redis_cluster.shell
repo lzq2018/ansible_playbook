@@ -1,0 +1,18 @@
+#!/bin/bash
+
+source /etc/bashrc
+#新版的redis不再使用ruby创建集群
+/usr/local/{{redis_dir}}/src/redis-cli --cluster create   
+{{ hostvars[inventory_hostname]['redis01_ip'] }}:7000 \
+{{ hostvars[inventory_hostname]['redis01_ip'] }}:7001 \
+{{ hostvars[inventory_hostname]['redis01_ip'] }}:7002 \
+{{ hostvars[inventory_hostname]['redis01_ip'] }}:7003 \
+{{ hostvars[inventory_hostname]['redis02_ip'] }}:7004 \
+{{ hostvars[inventory_hostname]['redis02_ip'] }}:7005 \
+{{ hostvars[inventory_hostname]['redis02_ip'] }}:7006 \
+{{ hostvars[inventory_hostname]['redis02_ip'] }}:7007 \
+{{ hostvars[inventory_hostname]['redis03_ip'] }}:7008 \
+{{ hostvars[inventory_hostname]['redis03_ip'] }}:7009 \
+{{ hostvars[inventory_hostname]['redis03_ip'] }}:7010 \
+{{ hostvars[inventory_hostname]['redis03_ip'] }}:7011 \
+--cluster-replicas 1

@@ -1,0 +1,35 @@
+---
+  - name: start cluster redis01 redis server
+    command: /usr/local/{{redis_dir}}/src/redis-server /etc/redis/redis_cluster/{{ item }}/redis.conf
+    with_items:
+      - 7000
+      - 7001
+      - 7002 
+      - 7003
+    when: role == 'redis'
+  - name: start cluster redis02 redis server
+    command: /usr/local/{{redis_dir}}/src/redis-server /etc/redis/redis_cluster/{{ item }}/redis.conf
+    with_items:
+      - 7004
+      - 7005
+      - 7006 
+      - 7007
+    when: role == 'redis'
+  - name: start cluster redis03 redis server
+    command: /usr/local/{{redis_dir}}/src/redis-server /etc/redis/redis_cluster/{{ item }}/redis.conf
+    with_items:
+     - 7008
+     - 7009
+     - 7010 
+     - 7011
+    when: role == 'redis'
+#configure ufw
+  - name: Allow port range 7000-7011
+    ufw:
+     rule: allow
+     port: 7000:7011
+     proto: tcp     
+#cluster init
+#请到任意一台redis server host下手动执行/tmp/create_redis_cluster.shell 完成集群最后的创建!
+  - name: Please go to any redis server host and manually execute /tmp/init_redis_cluster.shell to complete the final creation of the cluster!
+    template: src=create_redis_cluster.shell dest=/tmp/init_redis_cluster.shell

@@ -1,0 +1,18 @@
+---
+- hosts: redis-cluster
+  roles:
+    - redis-cluster
+  become: yes
+  become_user: root
+  become_method: sudo
+  
+  roles:
+    #服务器初始化
+    - ready
+    #安装redis软件
+    - install_redis
+    #配置集群实例
+    - configuration
+    #启动集群实例
+    - init_cluster
+

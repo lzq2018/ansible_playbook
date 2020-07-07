@@ -1,0 +1,17 @@
+---
+  #- name: download redis gzfile
+  #  get_url: url=http://download.redis.io/releases/{{redis_gz_file}} dest=/tmp/{{redis_gz_file}}
+  - name: copy redis archive file to remote hosts
+    copy: src={{redis_gz_file}}  dest=/tmp/{{redis_gz_file}}
+  - name: create {{redis_dir}} dir
+    shell: mkdir /usr/local/{{redis_dir}}
+    #忽略重复创建目录的错误
+    ignore_errors: yes 
+  - name: extract archive
+    command: chdir=/tmp/ /bin/tar -xf /tmp/{{redis_gz_file}} -C /usr/local/
+  - name: install redis
+    shell: cd /usr/local/{{redis_dir}}; make && make install
+  - name: add bin path
+    shell: sed -i '/{{redis_dir}}/d' /etc/profile ; echo export "PATH=/usr/local/{{redis_dir}}/src:$PATH" >>/etc/profile
+  - name: print redis version info
+    command: /usr/local/{{redis_dir}}/src/redis-cli -v

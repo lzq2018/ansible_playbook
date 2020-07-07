@@ -1,0 +1,15 @@
+#!/bin/bash
+#新版的redis不再使用ruby创建集群
+/usr/local/{{redis_dir}}/src/redis-cli --cluster create   \
+{{redis01_ip}}:7000 \
+{{redis01_ip}}:7001 \
+{{redis01_ip}}:7002 \
+{{redis01_ip}}:7003 \
+{{redis02_ip}}:7004 \
+{{redis02_ip}}:7005 \
+{{redis02_ip}}:7006 \
+{{redis02_ip}}:7007 \
+{{redis03_ip}}:7008 \
+{{redis03_ip}}:7009 \
+{{redis03_ip}}:7010 \
+{{redis03_ip}}:7011 --cluster-replicas 1
