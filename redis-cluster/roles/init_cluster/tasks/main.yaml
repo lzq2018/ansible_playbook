@@ -6,7 +6,7 @@
       - 7001
       - 7002 
       - 7003
-    when: role == 'redis'
+    when: role == 'redis01'
   - name: start cluster redis02 redis server
     command: /usr/local/{{redis_dir}}/src/redis-server /etc/redis/redis_cluster/{{ item }}/redis.conf
     with_items:
@@ -14,7 +14,7 @@
       - 7005
       - 7006 
       - 7007
-    when: role == 'redis'
+    when: role == 'redis02'
   - name: start cluster redis03 redis server
     command: /usr/local/{{redis_dir}}/src/redis-server /etc/redis/redis_cluster/{{ item }}/redis.conf
     with_items:
@@ -22,7 +22,7 @@
      - 7009
      - 7010 
      - 7011
-    when: role == 'redis'
+    when: role == 'redis03'
   #Allow port range 7000-7011
   - name: Allow port range 7000-7011
     ufw:
