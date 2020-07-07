@@ -23,12 +23,20 @@
      - 7010 
      - 7011
     when: role == 'redis'
-#configure ufw
+  #Allow port range 7000-7011
   - name: Allow port range 7000-7011
     ufw:
      rule: allow
      port: 7000:7011
      proto: tcp     
+    when: "ansible_os_family == 'Debian'"
+  - name: Allow port range 7000-7011
+    firewalld:
+     state: present
+     permanent: yes
+     state: enabled
+     port: 7000-7011/tcp
+    when: "ansible_os_family == 'Redhat'"
 #cluster init
 #请到任意一台redis server host下手动执行/tmp/create_redis_cluster.shell 完成集群最后的创建!
   - name: Please go to any redis server host and manually execute /tmp/init_redis_cluster.shell to complete the final creation of the cluster!
