@@ -17,5 +17,13 @@
       #- libstdc++-devel
     when: "ansible_os_family == 'Debian'"
   #Redhat 系统安装依赖
+  - name: install redis depend pkg
+    yum: name={{ item }} state=present
+    with_items:
+      - gcc
+      - gcc-c++
+      - libstdc++-devel
+      - libselinux-python
+    when: "ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'"
  
   
