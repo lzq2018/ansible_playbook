@@ -1,6 +1,6 @@
 redis_gz_file: redis-5.0.8.tar.gz
 redis_dir: redis-5.0.8
 
-redis01_ip: 192.168.144.31
-redis02_ip: 192.168.144.32
-redis03_ip: 192.168.144.33
+redis01_ip: 192.168.144.100
+redis02_ip: 192.168.144.101
+redis03_ip: 192.168.144.102
