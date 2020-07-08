@@ -1,0 +1,18 @@
+---
+    - name: Install ntp
+      yum: name=ntp state=present
+      tags: ntp
+    - name: Synchronization time
+      command: ntpdate {{ ntpserver }}
+      tags: ntp
+    - name: Configure ntp file
+      template: src=ntp.conf.j2 dest=/etc/ntp.conf
+      tags: ntp
+      notify: restart ntp
+    - name: Start the ntp service
+      service: name=ntpd state=started enabled=yes
+      tags: ntp
+    - name: test to see if selinux is runnning
+      command: getenforce
+      register: sestatus
+      changed_when: false

@@ -1,0 +1,10 @@
+---
+    - name: configuration to all nodes ntp
+      #hosts: production
+      hosts: hosts
+      gather_facts: true
+      become: yes
+      become_method: sudo
+      
+      roles:
+        - ntp
