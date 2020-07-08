@@ -1,0 +1,8 @@
+---
+# tasks file for zabbix-agent
+- name: Installing CentOS/Redhat Zabbix Agent
+  include_tasks: "/home/ubuntu/ansible_workspace/zabbix-agent-install-playbooks/roles/zabbix-agent/tasks/{{ansible_os_family| lower}}_install.yml"
+  when: "ansible_os_family == 'RedHat'"
+- name: Installing Debian/Ubuntu Zabbix Agent
+  include_tasks: "{{ansible_os_family| lower}}_install.yml"
+  when: "ansible_os_family == 'Debian'"                      

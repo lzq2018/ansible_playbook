@@ -1,0 +1,46 @@
+---
+# tasks file for zabbix-agent
+  - block:
+    - name: copy zabbix install package  to remote host _#trusty Ubuntu_Server14_LTS
+      copy: 
+        src={{ agent_deb_file_trusty }} 
+        dest=/tmp/{{ agent_deb_file_trusty }}
+    - name: Run the installation package _#trusty Ubuntu_Server14_LTS
+      apt:
+        deb: /tmp/{{ agent_deb_file_trusty }}
+    when:  ubuntu_version == 'trusty'
+  - block:
+    - name: copy zabbix install package  to remote host _#xenial Ubuntu_Server16_LTS
+      copy: 
+        src={{ agent_deb_file_xenial }} 
+        dest=/tmp/{{ agent_deb_file_xenial }}
+    - name: Run the installation package _#xenial Ubuntu_Server16_LTS
+      apt:
+        deb: /tmp/{{ agent_deb_file_xenial }}
+    when:  ubuntu_version == 'xenial'
+
+  - name: copy zabbix agent file to remote host
+    template: 
+      src: "{{ zabbix_agent_conf }}"
+      dest: /etc/zabbix/zabbix_agentd.conf 
+      owner: zabbix 
+      group: zabbix 
+      mode: 0600 
+      force: yes
+      backup: no
+  - name: give zabbix role to /var/run/zabbix
+    file:
+      path: /var/run/zabbix
+      owner: zabbix
+      group: zabbix
+      mode: '1777'
+  - name: allow  agent tcp port 
+    ufw:
+      rule: allow
+      port: "{{zabbix_agent_port}}"
+      proto: tcp
+  - name: start agent
+    service:
+     name: zabbix-agent
+     state: restarted
+

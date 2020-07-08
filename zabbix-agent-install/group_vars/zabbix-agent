@@ -1,0 +1,7 @@
+---
+zabbix_agent_port: 10050
+zabbix_server: 172.16.0.11
+zabbix_agent_conf: zabbix-agent.conf.v5.0.1.j2
+agent_deb_file_trusty: zabbix-agent_5.0.1-1+trusty_amd64.deb
+agent_deb_file_xenial: zabbix-agent_5.0.1-1+xenial_amd64.deb
+

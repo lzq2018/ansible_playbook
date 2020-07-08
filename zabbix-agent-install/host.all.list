@@ -1,0 +1,11 @@
+[tomcat]
+172.16.0.8 ubuntu_version=trusty hostname=app01
+172.16.0.9 ubuntu_version=trusty hostname=app02
+[db]
+10.0.0.3 ubuntu_version=trusty  hostname=db01
+10.0.0.2 ubuntu_version=trusty  hostname=db02
+
+[zabbix-agent:children]
+tomcat
+db
+

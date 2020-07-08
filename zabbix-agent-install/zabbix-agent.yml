@@ -1,0 +1,7 @@
+---
+- hosts: zabbix-agent 
+  roles:
+     - zabbix-agent
+  become: yes
+  become_method: sudo
+
