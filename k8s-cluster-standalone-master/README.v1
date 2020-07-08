@@ -1,0 +1,48 @@
+1.环境说明
+OS: CentOS Linux release 7.6.1810 (Core)
+K8S: v1.18.5,其它版本请自行尝试
+ETCD: v3.3.13
+Fanneld: v0.11.0
+
+2.注意事项
+1）最好了解或者熟悉Ansible Roles配置部署
+2）环境要干净！！ 
+3）所有二进制文件和配置模板都是放在role的files、template两个文件夹
+4）YUM和Docker、Docker Image镜像源都用的是阿里，init/files/有华为镜像，请按照网络情况修改主机组变量文件引用
+
+
+3.环境和IP说明
+192.168.144.100 #Master01 Ansible控制机 ETCD节点 flannel节点 
+192.168.144.101 #Node01 ETCD节点 flannel节点 docker节点
+192.168.144.102 #Node02 ETCD节点 flannel节点 docker节点
+
+4.Ansible配置
+ssh-copy-ip 192.168.144.100
+ssh-copy-ip 192.168.144.101
+ssh-copy-ip 192.168.144.102
+
+5.目录说明
+# tree -L 2
+.
+├── cfssl  #证书制作工具和证书生成配置的位置
+│   ├── cfssl
+│   ├── cfssl-certinfo
+│   ├── cfssljson
+│   ├── etcd_ssl #ETCD证书生成位置，里面的相关HOST要按实际情况修改
+│   └── k8s_ssl #ETCD证书生成位置，里面相关HOST要按实际情况修改
+├── group_vars
+│   └── k8s-hosts #主机组变量
+├── hosts #主机清单
+├── k8s-cluster.yaml #控制任务入口
+├── README #说明文件，请先阅读再配置使用
+└── roles
+    ├── etcd #ETCD安装和配置
+    ├── flannel #flannel 安装和配置
+    ├── init #主机初始化和准备工作
+    ├── k8s-master #master节点安装和配置
+    └── k8s-node #node节点安装和配置
+
+6.使用前先执行first_exec_me.sh，配置master节点和node节点的IP地址，注意不要配置错误，否则生成的配置会有问题
+7.该Ansible 控制任务部署暂时只限于学习和测试，如果需要用到生产环境，请充分测试！！
+8.运行以下命令进行安装
+# ansible-playbook -i hosts k8s-cluster.yaml

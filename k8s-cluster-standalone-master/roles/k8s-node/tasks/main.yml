@@ -1,0 +1,170 @@
+---
+  - block:
+      - name: create bootstrap.kubeconfig file
+        shell: |
+          export KUBERNETES_MASTER=http://127.0.0.1:8080
+          # 生成 Bootstrap Token
+          TOKEN_ID=$(head -c 6 /dev/urandom | md5sum | head -c 6)
+          TOKEN_SECRET=$(head -c 16 /dev/urandom | md5sum | head -c 16)
+          BOOTSTRAP_TOKEN="${TOKEN_ID}.${TOKEN_SECRET}"
+          echo "Bootstrap Token: ${BOOTSTRAP_TOKEN}"
+          # 使用secret存储token
+          cat > /tmp/bootstrap-secret.yaml <<EOF
+          apiVersion: v1
+          kind: Secret
+          metadata:
+          # 名字必须该格式
+            name: bootstrap-token-${TOKEN_ID}
+            namespace: kube-system
+          # 必须该类型
+          type: bootstrap.kubernetes.io/token
+          stringData:
+            description: "The default bootstrap token."
+            token-id: ${TOKEN_ID}
+            token-secret: ${TOKEN_SECRET}
+            expiration: $(date -d'+2 day' -u +"%Y-%m-%dT%H:%M:%SZ")
+            usage-bootstrap-authentication: "true"
+            usage-bootstrap-signing: "true"
+          EOF
+          /opt/kubernetes/bin/kubectl apply -f /tmp/bootstrap-secret.yaml
+          KUBE_APISERVER="{{KUBE_APISERVER}}"
+          KUBECTL_BIN_DIR=/opt/kubernetes/bin
+          # 生成 kubelet bootstrap kubeconfig 配置文件
+          ${KUBECTL_BIN_DIR}/kubectl config set-cluster kubernetes \
+            --certificate-authority=/opt/kubernetes/ssl/ca.pem \
+            --embed-certs=true \
+            --server=${KUBE_APISERVER} \
+            --kubeconfig=/tmp/bootstrap.kubeconfig
+            
+          ${KUBECTL_BIN_DIR}/kubectl config set-credentials "system:bootstrap:${TOKEN_ID}" \
+            --token=${BOOTSTRAP_TOKEN} \
+            --kubeconfig=/tmp/bootstrap.kubeconfig
+            
+          ${KUBECTL_BIN_DIR}/kubectl config set-context default \
+            --cluster=kubernetes \
+            --user="system:bootstrap:${TOKEN_ID}" \
+            --kubeconfig=/tmp/bootstrap.kubeconfig
+            
+           ${KUBECTL_BIN_DIR}/kubectl config use-context default --kubeconfig=/tmp/bootstrap.kubeconfig
+
+          # 允许 kubelet tls bootstrap 创建 CSR 请求
+          ${KUBECTL_BIN_DIR}/kubectl create clusterrolebinding create-csrs-for-bootstrapping \
+            --clusterrole=system:node-bootstrapper \
+            --group=system:bootstrappers
+          cat > /tmp/kubelet-config.yml <<EOF
+          apiVersion: v1
+          kind: Config
+          clusters:
+          - cluster:
+              certificate-authority: /opt/kubernetes/ssl/ca.pem
+              server: {{KUBE_APISERVER}}
+            name: kubernetes
+          contexts:
+          - context:
+              cluster: kubernetes
+              user: kubelet-bootstrap:${TOKEN_ID}
+            name: default
+          current-context: default
+          preferences: {}
+          users:
+          - name: kubelet-bootstrap:${TOKEN_ID}
+            user:
+              token: ${TOKEN_ID}.${TOKEN_SECRET}
+          EOF
+          # 生成 kube-proxy.kubeconfig bootstrap kubeconfig 配置文件
+          ${KUBECTL_BIN_DIR}/kubectl config set-cluster kubernetes \
+            --certificate-authority=/opt/kubernetes/ssl/ca.pem \
+            --embed-certs=true \
+            --server=${KUBE_APISERVER} \
+            --kubeconfig=/tmp/kube-proxy.kubeconfig
+            
+          ${KUBECTL_BIN_DIR}/kubectl config set-credentials kube-proxy \
+            --client-certificate=/opt/kubernetes/ssl/kube-proxy.pem \
+            --client-key=/opt/kubernetes/ssl/kube-proxy-key.pem \
+            --embed-certs=true \
+            --kubeconfig=/tmp/kube-proxy.kubeconfig
+            
+          ${KUBECTL_BIN_DIR}/kubectl config set-context default \
+            --cluster=kubernetes \
+            --user="system:bootstrap:${TOKEN_ID}" \
+            --kubeconfig=bootstrap.kubeconfig
+          ${KUBECTL_BIN_DIR}/kubectl config set-context default \
+            --cluster=kubernetes \
+            --user=kube-proxy \
+            --kubeconfig=/tmp/kube-proxy.kubeconfig
+          ${KUBECTL_BIN_DIR}/kubectl config use-context default --kubeconfig=/tmp/kube-proxy.kubeconfig
+      - name: copy master host bootstrap.kubeconfig , kubelet-config.yml to ansible host 
+        fetch:
+          src=/tmp/{{item}}
+          dest="{{ LOCAL_WORKSPACE }}/roles/k8s-node/files/"
+          force=yes
+        with_items:
+          - bootstrap.kubeconfig
+          - kubelet-config.yml
+          - kube-proxy.kubeconfig
+    when:  role == 'master'
+    run_once: true
+  - name: bootstrap.kubeconfig , kubelet-config.yml mv location
+    shell: |
+      cd "{{ LOCAL_WORKSPACE }}/roles/k8s-node/files/"
+      DIRNAME=$(ls master* -d)
+      mv ${DIRNAME}/tmp/bootstrap.kubeconfig "{{ LOCAL_WORKSPACE }}/roles/k8s-node/files/"
+      mv ${DIRNAME}/tmp/kubelet-config.yml "{{ LOCAL_WORKSPACE }}/roles/k8s-node/files/"
+      mv ${DIRNAME}/tmp/kube-proxy.kubeconfig "{{ LOCAL_WORKSPACE }}/roles/k8s-node/files/"
+      rm -rf ${DIRNAME}
+    delegate_to: 127.0.0.1
+    run_once: true
+  - block:
+      - name: copy kubelet file to /opt/kubernetes/bin/
+        copy:
+          src: "{{item}}"
+          dest: /opt/kubernetes/bin/
+          owner: root
+          force: yes
+          mode: "0755"
+        with_items:
+            - kubelet
+            - kube-proxy
+      - name: copy bootstrap.kubeconfig , kubelet-config.yml , kube-proxy.kubeconfig to node /opt/kubernetes/cfg/
+        copy:
+          src: "{{ item }}"
+          dest: /opt/kubernetes/cfg/
+          owner: root
+          force: yes
+          mode: "0644"
+        with_items:
+            - bootstrap.kubeconfig
+            - kubelet-config.yml
+            - kube-proxy.kubeconfig
+      - name: copy kubelet.service kube-proxy.service to node /usr/lib/systemd/system/
+        copy:
+          src: "{{ item }}"
+          dest: /usr/lib/systemd/system/
+          owner: root
+          mode: "0644"
+          force: yes
+        with_items:
+            - kubelet.service
+            - kube-proxy.service
+      - name: copy kubelet kube-proxy config to node /opt/kubernetes/cfg/
+        template:
+          src: "{{ item }}"
+          dest: /opt/kubernetes/cfg/
+          owner: root
+          mode: "0644"
+          force: yes
+        with_items:
+            - kubelet
+            - kubelet.config
+            - kube-proxy
+      - name: started kubelet and kube-proxy  service 
+        service: 
+          name: "{{item}}"
+          enabled: yes
+          state: restarted
+        with_items:
+          - kubelet.service
+          - kube-proxy.service
+    when: role == 'node'
+
+

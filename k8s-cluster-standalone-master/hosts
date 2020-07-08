@@ -1,0 +1,10 @@
+
+[k8s-master]
+master01 ansible_ssh_host=192.168.144.100 etcdname=etcd01 etcdhost=192.168.144.100 masterhost=192.168.144.100 role=master
+[k8s-node]
+node01 ansible_ssh_host=192.168.144.101 etcdname=etcd02 etcdhost=192.168.144.101 nodehost=192.168.144.101 role=node 
+node02 ansible_ssh_host=192.168.144.102 etcdname=etcd03 etcdhost=192.168.144.102 nodehost=192.168.144.102 role=node
+
+[k8s-hosts:children]
+k8s-master
+k8s-node

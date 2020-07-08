@@ -1,0 +1,88 @@
+---
+  #证书生成
+  - name: localhost create master ca certificate
+    local_action: shell cd {{ LOCAL_WORKSPACE }}/cfssl/k8s_ssl && cfssl gencert -initca ca-csr.json | cfssljson -bare ca -
+    run_once: true
+  - name: localhost create apiserver certificate
+    local_action: shell cd {{ LOCAL_WORKSPACE }}/cfssl/k8s_ssl && cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes server-csr.json | cfssljson -bare server
+    run_once: true
+  - name: location create kube-proxy certificate
+    local_action: shell cd {{ LOCAL_WORKSPACE }}/cfssl/k8s_ssl && cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes kube-proxy-csr.json | cfssljson -bare kube-proxy
+    run_once: true 
+  - name: location mv certificate file to {{ LOCAL_WORKSPACE }}/roles/k8s-master/files
+    local_action: shell mv {{ LOCAL_WORKSPACE }}/cfssl/k8s_ssl/{{item}}  {{ LOCAL_WORKSPACE }}/roles/k8s-master/files/
+    run_once: true 
+    with_items:
+      - server.pem
+      - server-key.pem
+      - kube-proxy.pem
+      - kube-proxy-key.pem
+      - ca.pem
+      - ca-key.pem
+  - name: copy certificate to /opt/kubernetes/ssl
+    copy:
+      src: "{{ item }}" 
+      dest: /opt/kubernetes/ssl
+      force: yes
+      owner: root
+      mode: "0644"
+    with_items:
+      - server.pem
+      - server-key.pem
+      - kube-proxy.pem
+      - kube-proxy-key.pem
+      - ca.pem
+      - ca-key.pem
+  #以下操作在Master节点执行
+  - block:
+    - name: copy kube-apiserver,kube-controller-manager,kubectl,kube-scheduler to /opt/kubernetes/bin
+      copy:
+       src: "{{ item }}"
+       dest: /opt/kubernetes/bin
+       force: yes
+       owner: root
+       mode: "0755"
+      with_items:
+        - kube-apiserver 
+        - kube-controller-manager
+        - kubectl
+        - kube-scheduler
+    - name: copy token.csv to /opt/kubernetes/cfg
+      copy:
+        src: token.csv
+        dest: /opt/kubernetes/cfg
+        force: yes
+        owner: root
+        mode: "0644"
+    - name: copy kube-apiserver,kube-controller-manager,kube-scheduler config to /opt/kubernetes/cfg
+      template:
+        src: "{{item}}"
+        dest: /opt/kubernetes/cfg
+        force: yes
+        owner: root
+        mode: "0644"
+      with_items:
+        - kube-apiserver
+        - kube-controller-manager
+        - kube-scheduler
+    - name: copy kube-apiserver,kube-controller-manager,kube-scheduler service config to /usr/lib/systemd/system/
+      copy:
+        src: "{{item}}" 
+        dest: /usr/lib/systemd/system/
+        owner: root
+        force: yes
+        mode: "0644"
+      with_items:
+        - kube-apiserver.service
+        - kube-controller-manager.service
+        - kube-scheduler.service
+    - name: started kube-apiserver,kube-controller-manager,kube-scheduler service
+      service:
+        name: "{{item}}"
+        state: restarted
+        enabled: true
+      with_items:
+        - kube-apiserver
+        - kube-controller-manager
+        - kube-scheduler
+    when:  role == 'master'

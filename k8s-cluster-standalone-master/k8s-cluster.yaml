@@ -1,0 +1,10 @@
+---
+- hosts: k8s-hosts
+  roles:
+    #服务器初始化
+    - init
+    - etcd
+    - flannel
+    - k8s-master
+    - k8s-node
+

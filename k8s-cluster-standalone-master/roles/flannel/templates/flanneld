@@ -1,0 +1,1 @@
+FLANNEL_OPTIONS="--etcd-endpoints={{ETCD_CLIENT_CLUSTER}} -etcd-cafile=/opt/etcd/ssl/ca.pem -etcd-certfile=/opt/etcd/ssl/server.pem -etcd-keyfile=/opt/etcd/ssl/server-key.pem"

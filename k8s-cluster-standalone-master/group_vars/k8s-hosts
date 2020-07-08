@@ -1,0 +1,14 @@
+#指定安装的版本
+DOCKER_NAME: docker-ce-18.06.1.ce-3.el7
+#工作目录，必须指定,因为有些任务是在本地执行完成之后推送到远程服务器
+LOCAL_WORKSPACE: /root/k8s-cluster-standalone-master
+#ETCD 客户端连接地址
+ETCD_CLIENT_CLUSTER: https://192.168.144.100:2379,https://192.168.144.101:2379,https://192.168.144.102:2379
+#集群初始化地址
+ETCD_INITIAL_CLUSTER: etcd01=https://192.168.144.100:2380,etcd02=https://192.168.144.101:2380,etcd03=https://192.168.144.102:2380
+#指定全局使用的MASTERT API地址,如果后续做高可用的话，这个地址也必须唯一
+KUBE_APISERVER: https://192.168.144.100:6443
+#指定YUM源文件
+#YUM_SOURCE: hw_CentOS-Base.repo
+YUM_SOURCE: hw_CentOS-Base.repo
+DOCKER_YUM_SOURCE: hw_docker-ce.repo
