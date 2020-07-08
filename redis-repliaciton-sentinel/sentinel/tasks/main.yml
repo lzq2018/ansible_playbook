@@ -1,0 +1,6 @@
+---
+# tasks file for redis-repliaciton-sentinel/sentinel
+  - name: redis master config
+    template: src=redis-sentinel-62379.conf dest=/etc/redis-sentinel-62379.conf backup=true
+  - name: start redis sentinel daemon 
+    command: redis-sentinel /etc/redis-sentinel-62379.conf

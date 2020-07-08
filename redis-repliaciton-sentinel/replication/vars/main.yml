@@ -1,0 +1,4 @@
+---
+# vars file for redis-repliaciton-sentinel/replication
+# 声明那个IP是主节点，必须配置
+master_ip: 192.168.1.120

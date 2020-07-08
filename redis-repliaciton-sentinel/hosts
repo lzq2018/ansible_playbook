@@ -1,0 +1,5 @@
+[app]
+master_host  ansible_host=192.168.1.120 ansible_port=22     ansible_user=vagrant ansible_ssh_private_key_file=/home/vagrant/host-key/private_key_app01
+slave01_host ansible_host=192.168.1.121 ansible_port=22     ansible_user=vagrant ansible_ssh_private_key_file=/home/vagrant/host-key/private_key_app02
+slave02_host ansible_host=192.168.1.123 ansible_port=22     ansible_user=vagrant ansible_ssh_private_key_file=/home/vagrant/host-key/private_key_app03
+

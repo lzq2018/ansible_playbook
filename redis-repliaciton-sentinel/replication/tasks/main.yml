@@ -1,0 +1,26 @@
+---
+  #redis配置
+  - name: redis master config
+    template: src=redis-master.conf dest=/etc/redis-master.conf backup=true
+    delegate_to: master_host
+  - name: redis slave01 config
+    template: src=redis-slave01.conf dest=/etc/redis-slave01.conf backup=true
+    delegate_to: slave01_host
+  - name: redis slave02 config
+    template: src=redis-slave02.conf dest=/etc/redis-slave02.conf backup=true
+    delegate_to: slave02_host
+  #启动redis服务
+  - name: start redis master
+    command: redis-server /etc/redis-master.conf
+    delegate_to: master_host
+  - name: wait for port master port 6379  to become open on the host
+    wait_for:
+      port: 6379
+    delegate_to: master_host
+  - name: start redis slave01
+    command: redis-server /etc/redis-slave01.conf
+    delegate_to: slave01_host
+  - name: start redis slave02
+    command: redis-server /etc/redis-slave02.conf
+    delegate_to: slave02_host
+

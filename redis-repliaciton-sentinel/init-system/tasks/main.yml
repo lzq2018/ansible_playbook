@@ -1,0 +1,30 @@
+---
+  - name: add value to sysctl.conf for net.core.somaxconn value is 2048
+    shell: sed -i '/net.core.somaxconn = 2048/d'/etc/sysct.conf; echo "net.core.somaxconn = 2048" >> /etc/sysctl.conf
+  - name: add value to sysctl.conf for vm.overcommit_memory = 1
+    shell: sed -i '/vm.overcommit_memory = 1/d'/etc/sysct.conf; echo "vm.overcommit_memory = 1" >> /etc/sysctl.conf
+  - name: sysctl -p
+    shell: sysctl -p
+  - name: disable hugepage config
+    shell: echo never > /sys/kernel/mm/transparent_hugepage/enabled
+  - name: copy CentOS-Base.repo to remote host
+    copy: src=CentOS-Base.repo dest=/etc/yum.repos.d/CentOS-Base.repo backup=no 
+  #- name: yum clean cache && rebuild cache
+  #  shell: yum clean all && yum makecache
+  - name: install redis packages
+    yum:
+      name:  "{{ packages }}"
+      state: latest
+      disable_gpg_check: yes
+      update_cache: yes
+    vars:
+      packages:
+      - epel-release-7-11
+      - redis-3.2.12-2.el7.x86_64
+  - name: firewalld rules add 6379/tcp 26379/tcp port
+    firewalld: port={{item}}/tcp permanent=true state=enabled immediate=yes
+    with_items:
+      - 6379
+      - 26379
+    ignore_errors: yes
+    

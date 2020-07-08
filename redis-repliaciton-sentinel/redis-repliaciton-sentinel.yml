@@ -1,0 +1,9 @@
+- hosts: app
+  remote_user: root
+  become: yes
+  become_method: sudo
+  
+  roles:
+    - { role: init-system, when: "ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'"}
+    - { role: replication, when: "ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'"}
+    - { role: sentinel, when: "ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'"}
