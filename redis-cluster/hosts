@@ -1,4 +1,4 @@
 [redis-cluster]
-redis01 ansible_ssh_host=192.168.144.31 role=redis01 redis01_ip=192.168.144.31
-redis02 ansible_ssh_host=192.168.144.32 role=redis02 redis02_ip=192.168.144.32
-redis03 ansible_ssh_host=192.168.144.33 role=redis03 redis03_ip=192.168.144.33
+redis01 ansible_ssh_host=192.168.144.100 role=redis01 redis01_ip=192.168.144.100
+redis02 ansible_ssh_host=192.168.144.101 role=redis02 redis02_ip=192.168.144.101
+redis03 ansible_ssh_host=192.168.144.102 role=redis03 redis03_ip=192.168.144.102
