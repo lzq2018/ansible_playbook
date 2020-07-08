@@ -1,0 +1,68 @@
+---
+- hosts: app 
+  become: True
+  become_method: sudo
+  strategy: debug  
+  tasks:
+    - name: clean remote host yum repos
+      shell: rm -f /etc/yum.repos.d/*.repo
+    - name: copy CentOS6-Base-163.repo to remote host
+      template: src=template/CentOS6-Base-163.repo dest=/etc/yum.repos.d/CentOS6-Base-163.repo
+      when: "ansible_os_family == 'RedHat' and ansible_distribution_major_version == '6'"
+    - name: copy centos6-base-163.repo to remote host
+      template: src=template/CentOS7-Base-163.repo dest=/etc/yum.repos.d/CentOS7-Base-163.repo
+      when: "ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'"
+    - name: yum install autofs 
+      yum: name=autofs state=present update_cache=yes
+      retries: 2
+    - name: copy autofs.conf to remote host
+      template: src=template/autofs.conf dest=/etc/autofs.conf
+    - name: copy auto.master to remote host
+      template: src=template/auto.master dest=/etc/auto.master
+    - name: copy nfs.misc to remote host 
+      template: src=template/nfs.misc dest=/etc/nfs.misc
+    - name: create nfs mount root /fileserver/
+      file: path=/fileserver/ state=directory mode=777
+    #这里先关停自动挂载服务，保证/upload能正常卸载 
+    - name: autofs service stop
+      service: name=autofs state=stopped  enabled=yes     
+      ignore_errors: true
+    - name: umount /upload 
+      mount: path=/upload state=unmounted
+    #这里判断/upload 是否是一个目录，如果是的话，先重命名
+    - name: determines whether the /upload directory exists
+      stat: path=/upload
+      register: st
+      #ignore_errors: True
+    #- debug: msg="Path exists and is a directory"
+    #  when: st.stat.isdir is defined and st.stat.isdir
+
+    - name: current local /upload rename to /upload_bak01
+      shell: cd /;  mv upload upload_bak01
+      when: st.stat.isdir is defined and st.stat.isdir
+    #这里判断/upload 软链接是否建立，如果建立了先删除
+    - name: /upload link is or not created
+      stat: path=/upload
+      register: st 
+    - name: delete /upload link 
+      command: rm -f /upload
+      when: st.stat.islink is defined and st.stat.islink
+    #删除完链接之后再创建，否则会出现嵌套循环
+    - name: create /upload -> /fileserver/mnt soft links
+      file: src=/fileserver/mnt dest=/upload state=link force=yes
+    
+    #这里判断/upload 是否为软链接，如果不是则报错,表示上一任务没有正确执行完毕，中断任务执行
+    - name: /upload is soft link
+      stat: path=/upload 
+      register: st
+    - name: assert that /upload is a soft link
+      assert:
+        that: st.stat.islnk
+
+    #这里启动自动挂载服务，并测试自动挂载是否生效
+    - name: autofs service start
+      service: name=autofs state=started enabled=yes    
+    - name: test mount 
+      shell: cd /upload && ls 
+      retries: 2
+      delay: 2
