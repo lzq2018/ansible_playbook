@@ -1,0 +1,3 @@
+---
+- name: test java
+  shell: /usr/local/{{java_base_name}}/bin/java -version

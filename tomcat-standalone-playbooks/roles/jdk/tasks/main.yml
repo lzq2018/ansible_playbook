@@ -1,0 +1,13 @@
+---
+- name: copy jdk file to remote host
+  copy: src={{ jdk_gz_file }} dest=/tmp/{{ jdk_gz_file }}
+- name: create java base name
+  file: dest=/usr/local/{{java_base_name}} state=directory
+- name: unarchive jdk file
+  unarchive: copy=no src=/tmp/{{ jdk_gz_file }} dest=/usr/local/
+- name: config java home
+  shell: sed -i '/{{ java_base_name }}/d' /etc/profile; echo "PATH=/usr/local/{{ java_base_name }}/bin:$PATH" >> /etc/profile
+- name: reload profile config
+  shell: source /etc/profile
+  notify: test java
+  

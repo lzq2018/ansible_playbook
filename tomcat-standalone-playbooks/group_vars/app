@@ -1,0 +1,12 @@
+http_port: 8080
+https_port: 8443
+
+jdk_gz_file: jdk-7u60-linux-x64.tar.gz
+java_base_name: jdk1.7.0_60
+
+tomcat_base_name: tomcat
+tomcat_name: apache-tomcat-7.0.100
+tomcat_gz_file: apache-tomcat-7.0.100.tar.gz
+
+
+

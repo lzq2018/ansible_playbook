@@ -1,0 +1,9 @@
+- hosts: app
+  remote_user: root
+  become: yes
+  become_method: sudo
+  
+  roles:
+    - selinux
+    - jdk
+    - tomcat

@@ -1,0 +1,35 @@
+---
+- name: add group "tomcat"
+  group: name=tomcat
+
+- name: add user "tomcat"
+  user: name=tomcat group=tomcat home=/usr/local/{{tomcat_base_name}} createhome=no
+  become: True
+  become_method: sudo
+
+- name: create tomcat base name
+  file: dest=/usr/local/{{tomcat_base_name}}/ state=directory owner=tomcat group=tomcat
+
+- name: copy tomcat gz file to remote host
+  copy: src={{tomcat_gz_file}} dest=/tmp/{{tomcat_gz_file}}
+
+- name: unarchive tomcat file
+  unarchive: copy=no src=/tmp/{{ tomcat_gz_file }} dest=/usr/local/{{tomcat_base_name}}/ owner=tomcat group=tomcat
+
+- name: config tomcat server.xml
+  template: src=server.xml dest=/usr/local/{{tomcat_base_name}}/{{tomcat_name}}/conf/
+- name: copy tomcat init script
+  template: src=tomcat.sh dest=/etc/init.d/tomcat mode=0755
+- name: start tomcat 
+  service: name=tomcat state=started enabled=yes
+  become: True
+  become_method: sudo
+- name: start firewalld
+  service: name=firewalld state=started
+  become: True
+  become_method: sudo
+- name: config firewalld
+  firewalld: port={{http_port}}/tcp permanent=true state=enabled immediate=yes
+  when: "ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'"
+- name: check tomcat port
+  wait_for: port={{http_port}}
