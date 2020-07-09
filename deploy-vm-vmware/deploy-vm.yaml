@@ -1,0 +1,36 @@
+---
+  - hosts: localhost
+    gather_facts: no
+    vars:
+      vcenter_server: "10.10.0.1"
+      vcenter_user: "administrator@vsphere.local"
+      vcenter_pass: "password"
+      datacenter_name: "dc-name"
+      cluster_name: "cluster-name"
+    tasks:
+    - name: Clone the template
+      vmware_guest:
+        datacenter: "{{datacenter_name}}"
+        hostname: "{{vcenter_server}}"
+        username: "{{vcenter_user}}"
+        password: "{{vcenter_pass}}"
+        validate_certs: False
+        name: test-vm01
+        template: centos7_mini_template
+        datastore: "vsanDatastore"
+        folder: /vm_folder/
+        cluster: "{{cluster_name}}"
+        networks:
+        - name: VM Network
+          ip: 10.2.16.232
+          netmask: 255.255.255.0
+          gateway: 10.2.16.254
+          dns_servers: 10.2.16.16
+        customization:
+          hostname: test-vm01
+          dns_servers:
+          - 10.1.1.100
+        state: poweredon
+        wait_for_ip_address: yes
+      delegate_to: localhost
+      
