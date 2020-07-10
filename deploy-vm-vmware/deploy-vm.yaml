@@ -2,11 +2,13 @@
   - hosts: localhost
     gather_facts: no
     vars:
-      vcenter_server: "10.10.0.1"
+      vcenter_server: "10.100.7.22"
       vcenter_user: "administrator@vsphere.local"
       vcenter_pass: "password"
-      datacenter_name: "dc-name"
-      cluster_name: "cluster-name"
+      #数据中心名称
+      datacenter_name: "pxzx"
+      #群集名称
+      cluster_name: "pxzx-vsan"
     tasks:
     - name: Clone the template
       vmware_guest:
@@ -15,22 +17,45 @@
         username: "{{vcenter_user}}"
         password: "{{vcenter_pass}}"
         validate_certs: False
-        name: test-vm01
+        #虚拟机名称
+        name: "{{item.VM_NAME}}"
+        #模板名称
         template: centos7_mini_template
+        #VSAN存储的名称
         datastore: "vsanDatastore"
-        folder: /vm_folder/
+        #存放虚拟机的位置
+        folder: "{{item.VM_FOLDER}}/"
         cluster: "{{cluster_name}}"
+        #虚拟机网络定义
         networks:
         - name: VM Network
-          ip: 10.2.16.232
+          ip: "{{item.VM_IP}}"
           netmask: 255.255.255.0
-          gateway: 10.2.16.254
-          dns_servers: 10.2.16.16
+          gateway: "{{item.VM_IP_GATEWAY}}"
+          #dns_servers: "{{item.VM_DNS}}"
+          #分布式交换机,这个暂时没有配置成功
+          #dvswitch_name: "{{item.VM_DVSWNAME}}"
+        #硬件配置
+        hardware:
+          memory_mb: 4096
+        #虚拟机OS定义
         customization:
-          hostname: test-vm01
+          existing_vm: True
+          hostname: "{{item.VM_NAME}}"
           dns_servers:
-          - 10.1.1.100
-        state: poweredon
+          - "{{item.VM_DNS}}"
+          #密码修改不生效
+          #password: "password"
+          #UTC代码，210表示东八区
+          timezone: 210
+          state: poweredon
+        #等待地址分配到虚拟机再退出
         wait_for_ip_address: yes
+      #定义多个虚拟机创建变量
+      with_items:
+        - {VM_NAME: gsdb-01, VM_IP: 10.21.6.231, VM_IP_GATEWAY: 10.21.6.254, VM_FOLDER: vm_folder}
+        - {VM_NAME: gsdb-02, VM_IP: 10.21.6.232, VM_IP_GATEWAY: 10.21.6.254, VM_FOLDER: vm_folder}
+        - {VM_NAME: gsdb-03, VM_IP: 10.21.6.233, VM_IP_GATEWAY: 10.21.6.254, VM_FOLDER: vm_folder}
+      #委托本地运行这个Playbook
       delegate_to: localhost
       
