@@ -1,0 +1,78 @@
+---
+  #关闭主机一些服务和配置
+  - name: disable firewalld
+    shell: systemctl stop firewalld && systemctl disable firewalld
+  - name: disable selinux
+    shell: sed -i 's/enforcing/disabled/' /etc/selinux/config
+  - name: swap off
+    shell: swapoff -a && cp /etc/fstab /etc/fstab_bak && sed -i '/swap/d' /etc/fstab
+  #创建目录
+  - name: create etcd/flanneld/kubernetes/ workspace
+    shell: mkdir -p /opt/etcd/{bin,cfg,ssl} && mkdir -p /opt/flanneld/{bin,cfg,ssl} && mkdir -p /opt/kubernetes/{bin,cfg,ssl}
+  #拷贝YUM源文件
+  - name: copy  CentOS-Base.repo to /etc/yum.repos.d/
+    copy:
+      src: "{{YUM_SOURCE}}"
+      dest: /etc/yum.repos.d/
+      owner: root
+      group: root
+      mode: '0644'
+  #同步时间   
+  - name: yum install ntpdate
+    yum:
+      name: ntpdate
+      state: present 
+  - name: ntpdate time.windows.com
+    command: ntpdate time.windows.com
+  #设置主机名
+  - name: set host name 
+    hostname: 
+      name: "{{inventory_hostname}}" 
+  #将证书生成工具拷贝到控制Ansible机/usr/bin/目录
+  - name: copy cfssl-tools to localhost /usr/bin
+    copy:
+     src: "{{ LOCAL_WORKSPACE }}/cfssl/{{ item }}"
+     dest: /usr/bin
+     mode: '0755'
+    with_items:
+      - cfssl
+      - cfssl-certinfo
+      - cfssljson
+    delegate_to: 127.0.0.1
+    run_once: true
+  - name: copy k8s.conf to /etc/sysctl.d/ 
+    copy:
+        src:  k8s.conf 
+        dest: /etc/sysctl.d/
+        owner: root
+        group: root
+        mode: '0644'
+  - name: sysctl --system
+    command: sysctl --system
+  ###以下阶段只在node节点执行
+  - block:
+      - name: copy docker-ce yum repo to host /etc/yum.repos.d/
+        copy:
+          src: "{{DOCKER_YUM_SOURCE}}"
+          dest: /etc/yum.repos.d/
+          owner: root
+          group: root
+          mode: '0644'
+      - name: yum install docker-ce
+        yum:
+          name: "{{ DOCKER_NAME }}"
+      - name: copy docker image source to host /etc/docker/
+        copy:
+          src: daemon.json
+          dest: /etc/docker/
+          owner: root
+          group: root
+          mode: '0644'
+      - name: copy docker service file to host /usr/lib/systemd/system/
+        copy:
+          src: docker.service
+          dest: /usr/lib/systemd/system/
+          owner: root
+          group: root
+          mode: '0644'
+    when: role == "node"

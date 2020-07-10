@@ -1,0 +1,19 @@
+---
+- hosts: k8s-hosts
+  become: yes
+  become_user: root
+  become_method: sudo
+  roles:
+    #服务器初始化
+    - init
+    #负载均衡器部署,采用4层代理转发
+    - nginx
+    #ETCD集群部署
+    - etcd
+    #网络插件部署
+    - flannel
+    #MASTER节点部署
+    - k8s-master
+    #工作节点部署
+    - k8s-node
+

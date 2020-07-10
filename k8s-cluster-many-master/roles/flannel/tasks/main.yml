@@ -1,0 +1,41 @@
+---
+  - block:
+    - name: copy flannel file to /opt/kubernetes/bin
+      copy:
+        src: "{{ item }}"
+        dest: /opt/kubernetes/bin/
+        mode: '0755'
+      with_items:
+        - flanneld
+        - mk-docker-opts.sh
+    - name: copy flannel conf to /opt/kubernetes/cfg
+      template:
+        src:  flanneld
+        dest: /opt/kubernetes/cfg
+        mode: '0644'
+    - name: copy flannel service  to /usr/lib/systemd/system/
+      template:
+        src: flanneld.service 
+        dest: /usr/lib/systemd/system/
+        mode: '0644'
+    - name: add flannel network config to etcd 
+      shell:
+        cmd: | 
+          /opt/etcd/bin/etcdctl --ca-file=/opt/etcd/ssl/ca.pem --cert-file=/opt/etcd/ssl/server.pem --key-file=/opt/etcd/ssl/server-key.pem --endpoints="{{ETCD_CLIENT_CLUSTER}}"  set /coreos.com/network/config  '{ "Network": "172.17.0.0/16", "Backend": {"Type": "vxlan"}}'
+      run_once: true 
+    - name: reload flanneld service conf
+      command: systemctl daemon-reload
+    - name: start flannel service 
+      service: 
+        name: flanneld.service
+        state: restarted
+        enabled: true
+    - name: start docker service
+      service:
+        name: docker
+        state: restarted
+        enabled: true
+      delegate_to:  "{{item}}"
+      with_items: "{{groups['k8s-node']}}"
+    when: role != "nginx"
+

@@ -1,0 +1,14 @@
+
+[k8s-master]
+master01 ansible_ssh_host=192.168.144.100 etcdname=etcd01 etcdhost=192.168.144.100 master-host01=192.168.144.100 role=master etcdnode=yes
+master02 ansible_ssh_host=192.168.144.99  role=master master-host02=192.168.144.99 etcdnode=no
+[k8s-node]
+node01 ansible_ssh_host=192.168.144.101 etcdname=etcd02 etcdhost=192.168.144.101 nodehost=192.168.144.101 role=node etcdnode=yes
+node02 ansible_ssh_host=192.168.144.102 etcdname=etcd03 etcdhost=192.168.144.102 nodehost=192.168.144.102 role=node etcdnode=yes
+[k8s-nginx]
+nginx ansible_ssh_host=192.168.144.110 role=nginx etcdnode=no
+
+[k8s-hosts:children]
+k8s-master
+k8s-node
+k8s-nginx

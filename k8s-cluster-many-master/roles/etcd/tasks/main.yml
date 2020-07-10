@@ -1,0 +1,63 @@
+---
+# tasks file for etcd
+  - block:
+    - name: localhost create etcd certificate
+      local_action: shell cd {{ LOCAL_WORKSPACE }}/cfssl/etcd_ssl/ && cfssl gencert -initca ca-csr.json | cfssljson -bare ca - \
+             && cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=www server-csr.json | cfssljson -bare server
+      run_once: true
+    - name: copy etcd certificate to /opt/etcd/ssl
+      copy:
+        src:  "{{ LOCAL_WORKSPACE }}/cfssl/etcd_ssl/{{ item }}"
+        dest: /opt/etcd/ssl/
+        force: yes
+        owner: root
+        mode: "0644"
+      with_items:
+        - ca-key.pem
+        - ca.pem
+        - server.pem
+        - server-key.pem
+    - name: copy etcd bin to /opt/etcd/bin/
+      copy: 
+        src: "{{ item }}"
+        dest: /opt/etcd/bin/
+        mode: '0755'
+        owner: root
+      with_items:
+        - etcd
+        - etcdctl
+    - name: copy etcd cfg to /opt/etcd/cfg/
+      template:
+        src: etcd
+        dest: /opt/etcd/cfg/
+        force: yes
+        mode: "0644"
+        owner: root
+    - name: copy etcd systemd cfg to /usr/lib/systemd/system
+      copy:
+        src: etcd.service
+        dest: /usr/lib/systemd/system/
+        mode: "0644"
+        owner: root
+        force: yes
+    - name: reload systemd cfg
+      command: systemctl daemon-reload
+    - name: start etcd service
+      service: 
+        name: etcd.service
+        state: restarted
+        enabled: true
+    - name: check etcd helath                                                                                                      
+      command: /opt/etcd/bin/etcdctl \
+               --ca-file=/opt/etcd/ssl/ca.pem --cert-file=/opt/etcd/ssl/server.pem --key-file=/opt/etcd/ssl/server-key.pem \ 
+               --endpoints="{{ETCD_CLIENT_CLUSTER}}"  cluster-health
+      run_once: true
+    - name: clean local pem file
+      local_action: command rm -f "{{ LOCAL_WORKSPACE }}/cfssl/{{ item }}"
+      with_items:
+        - ca-key.pem
+        - ca.pem
+        - server.pem
+        - server-key.pem
+      run_once: true
+    when: etcdnode == "yes"

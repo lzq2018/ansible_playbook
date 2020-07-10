@@ -1,0 +1,27 @@
+---
+# tasks file for nginx
+  - block:
+    - name: "下载OpenResty 安装源"
+      get_url:
+        url: https://openresty.org/package/centos/openresty.repo
+        dest: /etc/yum.repos.d/
+    - name: "更新源索引,并安装最新OpenResty"
+      yum:
+        update_cache: yes
+        name: openresty
+        state: latest
+    - name: "替换配置模板"
+      template:
+        src: nginx.conf.j2
+        dest: /usr/local/openresty/nginx/conf/nginx.conf
+        owner: root
+        group: root
+        mode: '0644'
+        force: yes
+    - name: "启动服务"
+      service:
+        name: openresty
+        state: restarted
+        enabled: yes
+    when: role == "nginx"
+
