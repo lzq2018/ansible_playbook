@@ -1,10 +1,10 @@
-#### 使用 Ansible  进行双主节点的Kubernetes部署
+#### 双主节点的Kubernetes部署
 
 #### 0.注意事项
-1）最好了解或者熟悉Ansible Roles配置部署
-2）环境要干净！！ 
-3）所有二进制文件和配置模板都是放在role的files、template两个文件夹
-4）YUM和Docker、Docker Image镜像源都用的是阿里，init/files/有华为镜像，请按照网络情况修改主机组变量文件引用
++ 1）最好了解或者熟悉Ansible Roles配置部署
++ 2）环境要干净！！ 
++ 3）所有二进制文件和配置模板都是放在role的files、template两个文件夹
++ 4）YUM和Docker、Docker Image镜像源都用的是阿里，init/files/有华为镜像，请按照网络情况修改主机组变量文件引用
 
 #### 1. 环境介绍说明:
 
@@ -23,7 +23,7 @@ LB: openresty/1.17.8.1
 | LB       | 192.168.144.110 | openresty/1.17.8.1                |
 | Master01 | 192.168.144.100 | master节点、etcd节点、flannel节点 |
 | Master02 | 192.168.144.99  | master节点、flannel节点           |
-|          | 192.168.144.101 | node节点、etcd节点、flannel节点   |
+| Node01         | 192.168.144.101 | node节点、etcd节点、flannel节点   |
 | Node02   | 192.168.144.102 | node节点、etcd节点、flannel节点   |
 
 
